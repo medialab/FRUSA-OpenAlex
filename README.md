@@ -7,7 +7,7 @@
 
 ```text
 FRUSA-OpenAlex/
-├── sql/                        # All build scripts (executed with psql -f)
+├── sqls/                        # All build scripts (executed with psql -f)
 │   ├── article_de_us_metadata.sql
 │   ├── article_fr_us_metadata.sql
 │   ├── ...
