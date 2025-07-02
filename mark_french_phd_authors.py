@@ -95,9 +95,14 @@ def prepare_author_urls(input_file: str, output_file: str, filter_france: bool =
             author_id = row['author_id']
             country_seq = row.get('country_codes_sequence', '')
             
-            # Check if started in France
+            # Compute flags
             started_in_france = False
+            ever_in_france = False
             if isinstance(country_seq, str) and country_seq:
+                # Normalize sequence and check for FR anywhere
+                if 'FR' in country_seq.split(',') or 'FR' in country_seq:
+                    ever_in_france = True
+                
                 countries = [c.strip() for c in country_seq.split(' -> ')]
                 first_country = None
                 for country in countries:
@@ -114,6 +119,7 @@ def prepare_author_urls(input_file: str, output_file: str, filter_france: bool =
                     'author_id': author_id,
                     'url': f"https://api.openalex.org/authors/{author_id}",
                     'started_in_france': started_in_france,
+                    'ever_in_france': ever_in_france,
                     'country_sequence': country_seq
                 })
         
@@ -347,6 +353,7 @@ def extract_author_names(minet_output: str, names_output: str) -> int:
                             'author_id': row['author_id'],
                             'display_name': name,
                             'started_in_france': row['started_in_france'],
+                            'ever_in_france': row.get('ever_in_france', False),
                             'country_sequence': row['country_sequence']
                         })
             except (json.JSONDecodeError, KeyError, FileNotFoundError):
@@ -376,6 +383,7 @@ def prepare_thesis_urls(names_file: str, urls_output: str) -> int:
                     'display_name': name,
                     'url': url,
                     'started_in_france': row['started_in_france'],
+                    'ever_in_france': row.get('ever_in_france', False),
                     'country_sequence': row['country_sequence']
                 })
         
@@ -397,7 +405,8 @@ def analyze_thesis_results(results_file: str, final_output: str) -> dict:
             'successful_searches': 0,
             'potential_matches': 0,
             'confident_matches': 0,
-            'france_starters_with_phd': 0
+            'france_starters_with_phd': 0,
+            'authors_ever_in_france': 0
         }
         
         final_results = []
@@ -407,11 +416,16 @@ def analyze_thesis_results(results_file: str, final_output: str) -> dict:
                 'author_id': row['author_id'],
                 'display_name': row['display_name'],
                 'started_in_france': row['started_in_france'],
+                'ever_in_france': row.get('ever_in_france', False),
                 'country_sequence': row['country_sequence'],
                 'has_potential_thesis': False,
                 'thesis_confidence': 'none',
                 'thesis_details': None
             }
+            
+            # Update stats for authors ever in France
+            if result['ever_in_france']:
+                stats['authors_ever_in_france'] += 1
             
             if row['http_status'] == 200:  # Use http_status instead of status
                 stats['successful_searches'] += 1
