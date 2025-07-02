@@ -172,3 +172,14 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Project-specific ignore rules
+# Ignore scraped/downloaded data directory
+downloaded/
+
+# Ignore large data CSV files
+author_sequences_final.py.csv
+author_sequences_final.py_urls.csv
+
+# Ignore all CSV files in repository
+*.csv
